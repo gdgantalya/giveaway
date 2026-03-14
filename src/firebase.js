@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBcQiOGN528ojhtFHb-fLpOI6yyPahrQZ4",
+    apiKey: "*",
     authDomain: "gdg-cek.firebaseapp.com",
     projectId: "gdg-cek",
     storageBucket: "gdg-cek.firebasestorage.app",
