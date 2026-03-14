@@ -1,3 +1,42 @@
+# Çekiliş Sistemi
+ 
+Etkinliklerde hediyelerin doğru kişilere ulaşması için geliştirilmiş modern çekiliş yönetim platformu.
+ 
+---
+ 
+##  Önizleme
+ 
+| Ana Sayfa | Yönetim Paneli |
+|-----------|----------------|
+| Çekiliş kartları, katılım formu | Çekiliş yönetimi, canlı çekiliş animasyonu |
+ 
+---
+ 
+##  Özellikler
+ 
+### Kullanıcı Tarafı
+- Çekiliş kartlarını görüntüleme (görsel, açıklama, sponsor, katılımcı sayısı)
+-  İsim ve e-posta ile çekilişe katılma
+-  Aynı e-posta ile tekrar katılım engeli
+ 
+### Yönetim Paneli
+-  Şifre korumalı giriş
+-  Çekiliş ekleme, düzenleme, silme
+-  Katılımcı listesi görüntüleme
+-  Katılımcılar arasından rastgele kişi seçme
+-  Canlı çekiliş animasyonu (slot makinesi + konfeti)
+-  Tam mobil uyumlu tasarım
+ 
+---
+ 
+##Teknolojiler
+ 
+- **React + Vite** — kullanıcı arayüzü
+- **Firebase Firestore** — gerçek zamanlı veritabanı
+- **CSS Variables** — tema yönetimi
+ 
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
