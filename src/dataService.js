@@ -68,3 +68,21 @@ export async function hasEntered(raffleId, email) {
     ));
     return !snap.empty;
 }
+
+// ── WINNER ───────────────────────────────────────────
+
+export async function saveWinner(raffleId, winner) {
+    await updateDoc(doc(db, 'raffles', raffleId), {
+        winner: { name: winner.name, email: winner.email },
+        completedAt: new Date(),
+        status: 'completed',
+    });
+}
+
+export async function clearWinner(raffleId) {
+    await updateDoc(doc(db, 'raffles', raffleId), {
+        winner: null,
+        completedAt: null,
+        status: 'active',
+    });
+}

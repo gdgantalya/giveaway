@@ -1,4 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+}
 
 *,
 *::before,
@@ -9,19 +42,24 @@
 }
 
 :root {
-  --bg: #fceed1;
-  --surface: #fff8ec;
-  --surface2: #fff5e9;
-  --surface3: #ffecd4;
-  --border: rgba(255, 183, 102, 0.2);
-  --border2: rgba(255, 183, 102, 0.35);
-  --accent: #ffb766;
-  --accent-dim: rgba(255, 183, 102, 0.15);
-  --accent2: #f43a09;
-  --success: #68d388;
-  --text: #1a1208;
-  --muted: #9a8a78;
-  --muted2: #6b5c4e;
+  --bg: #ffffff;
+  --surface: #f8f9fa;
+  --surface2: #f1f3f4;
+  --surface3: #e8eaed;
+  --border: rgba(0, 0, 0, 0.08);
+  --border2: rgba(0, 0, 0, 0.15);
+  --accent: #4285f4;
+  --accent-dim: rgba(66, 133, 244, 0.1);
+  --accent2: #ea4335;
+  --success: #34a853;
+  --warning: #f9ab00;
+  --text: #1e1e1e;
+  --muted: #80868b;
+  --muted2: #5f6368;
+  --red: #ea4335;
+  --green: #34a853;
+  --yellow: #f9ab00;
+  --blue: #4285f4;
 }
 
 html {
@@ -29,11 +67,119 @@ html {
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Google Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+.home-bg::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: -150px;
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(66, 133, 244, 0.28) 0%, transparent 65%);
+  filter: blur(45px);
+  animation: floatBlob 8s ease-in-out infinite;
+}
+
+.home-bg::after {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(234, 67, 53, 0.24) 0%, transparent 65%);
+  filter: blur(40px);
+  animation: floatBlob 10s ease-in-out infinite reverse;
+}
+
+.blob-green {
+  position: absolute;
+  bottom: 10%;
+  left: 10%;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(52, 168, 83, 0.22) 0%, transparent 65%);
+  filter: blur(42px);
+  animation: floatBlob 12s ease-in-out infinite 2s;
+}
+
+.blob-yellow {
+  position: absolute;
+  bottom: 20%;
+  right: 5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(249, 171, 0, 0.22) 0%, transparent 65%);
+  filter: blur(40px);
+  animation: floatBlob 9s ease-in-out infinite 1s reverse;
+}
+
+@keyframes floatBlob {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -40px) scale(1.05);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.97);
+  }
+}
+
+.admin-bg::before {
+  content: '';
+  position: absolute;
+  top: -150px;
+  right: -100px;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(66, 133, 244, 0.22) 0%, transparent 65%);
+  filter: blur(45px);
+  animation: floatBlob 9s ease-in-out infinite;
+}
+
+.admin-bg::after {
+  content: '';
+  position: absolute;
+  bottom: -100px;
+  left: -100px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(52, 168, 83, 0.2) 0%, transparent 65%);
+  filter: blur(42px);
+  animation: floatBlob 11s ease-in-out infinite reverse;
+}
+
+.admin-blob-red {
+  position: absolute;
+  top: 40%;
+  right: 20%;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(234, 67, 53, 0.2) 0%, transparent 65%);
+  filter: blur(40px);
+  animation: floatBlob 10s ease-in-out infinite 1.5s;
+}
+
+.admin-blob-yellow {
+  position: absolute;
+  bottom: 30%;
+  left: 30%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(249, 171, 0, 0.2) 0%, transparent 65%);
+  filter: blur(38px);
+  animation: floatBlob 8s ease-in-out infinite 3s reverse;
 }
 
 body::after {
