@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getRaffles, getEntries, getCountMap, addRaffle, updateRaffle, deleteRaffle, getEntriesForRaffle } from '../dataService';
+import { getRaffles, getEntries, getCountMap, addRaffle, updateRaffle, deleteRaffle, toggleRaffleActive, getEntriesForRaffle, getAttendees, addAttendees, clearAttendees } from '../dataService';
 import WinnerOverlay from '../components/WinnerOverlay';
 import ParticipantsModal from '../components/ParticipantsModal';
+import * as XLSX from 'xlsx';
 
 // Material Icons
 import LockIcon from '@mui/icons-material/Lock';
@@ -21,6 +22,9 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import EmailIcon from '@mui/icons-material/Email';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import DownloadIcon from '@mui/icons-material/Download';
 
 const ADMIN_CREDS = { user: 'admin', pass: 'admin123' };
 const COLORS = ['#4285f4', '#ea4335', '#34a853', '#f9ab00'];
@@ -45,16 +49,16 @@ function LoginScreen({ onLogin, onBack }) {
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', position: 'relative', zIndex: 1 }}>
-            <div className="admin-bg">
+            {/* <div className="admin-bg">
                 <div className="admin-blob-red" />
                 <div className="admin-blob-yellow" />
-            </div>
+            </div> */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border2)', borderRadius: 24, padding: '3rem', width: '100%', maxWidth: 400, textAlign: 'center', animation: 'fadeUp 0.5s ease', position: 'relative' }}>
                 <button onClick={onBack} style={{ position: 'absolute', top: '1.2rem', left: '1.2rem', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontFamily: 'Google Sans, sans-serif', fontSize: '0.82rem' }}>
                     <ArrowBackIcon sx={{ fontSize: 16 }} /> Geri
                 </button>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-                    <img src="/gdg-logo2.png" alt="GDG Antalya" style={{ height: 44, objectFit: 'contain' }} />
+                    <img src="/gdg-logo2.png" alt="GDG Antalya" style={{ height: 54, objectFit: 'contain' }} />
                 </div>
                 <h1 style={{ fontFamily: 'Google Sans, sans-serif', fontSize: '1.6rem', fontWeight: 700, marginBottom: '0.4rem' }}>Yönetim Paneli</h1>
                 <p style={{ color: 'var(--muted2)', fontSize: '0.87rem', marginBottom: '2rem' }}>Devam etmek için giriş yapın</p>
@@ -99,13 +103,15 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
     const [participants, setParticipants] = useState(null);
     const [drawRaffle, setDrawRaffle] = useState(null);
     const [toast, setToast] = useState(null);
+    const [attendees, setAttendees] = useState([]);
+    const [uploading, setUploading] = useState(false);
 
     function showToast(msg, type = 'success') { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); }
 
     async function load() {
         try {
-            const [r, e, c] = await Promise.all([getRaffles(), getEntries(), getCountMap()]);
-            setRaffles(r); setAllEntries(e); setCountMap(c);
+            const [r, e, c, a] = await Promise.all([getRaffles(), getEntries(), getCountMap(), getAttendees()]);
+            setRaffles(r); setAllEntries(e); setCountMap(c); setAttendees(a);
         } catch (e) { console.error(e); }
     }
 
@@ -131,7 +137,53 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
     async function handleDelete(r) {
         if (!confirm(`"${r.name}" silinsin mi?`)) return;
         try { await deleteRaffle(r.id); showToast('Silindi.'); await load(); }
-        catch (e) { showToast('Hata oluştu!', 'error'); }
+        catch (e) { console.error('Silme hatası:', e); showToast('Hata oluştu!', 'error'); }
+    }
+
+    async function handleToggleActive(r) {
+        const newState = !(r.isActive !== false);
+        try { await toggleRaffleActive(r.id, newState); showToast(newState ? 'Çekiliş aktif edildi.' : 'Çekiliş pasife alındı.'); await load(); }
+        catch (e) { console.error('Durum değiştirme hatası:', e); showToast('Hata oluştu!', 'error'); }
+    }
+
+    async function handleExcelUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const data = await file.arrayBuffer();
+            const wb = XLSX.read(data);
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+            const emails = rows
+                .flat()
+                .map(v => (typeof v === 'string' ? v : String(v || '')).toLowerCase().trim())
+                .filter(v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+            if (!emails.length) { showToast('Geçerli e-posta bulunamadı!', 'error'); setUploading(false); return; }
+            await addAttendees(emails);
+            showToast(`${emails.length} e-posta yüklendi!`);
+            await load();
+        } catch (err) { console.error('Excel yükleme hatası:', err); showToast('Dosya okunamadı!', 'error'); }
+        setUploading(false);
+        e.target.value = '';
+    }
+
+    async function handleClearAttendees() {
+        if (!confirm('Tüm e-posta listesi silinsin mi?')) return;
+        try { await clearAttendees(); showToast('Liste temizlendi.'); await load(); }
+        catch (err) { console.error(err); showToast('Hata oluştu!', 'error'); }
+    }
+
+    function handleDownloadTemplate() {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([
+            ['Email'],
+            ['ornek1@gmail.com'],
+            ['ornek2@gmail.com'],
+            ['ornek3@gmail.com'],
+        ]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Katılımcılar');
+        XLSX.writeFile(wb, 'email-sablonu.xlsx');
     }
 
     async function handleDraw(r) {
@@ -144,6 +196,7 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
         { id: 'raffles', title: 'Çekilişler', Icon: DashboardIcon },
         { id: 'add', title: 'Yeni Çekiliş', Icon: AddIcon },
         { id: 'entries', title: 'Katılımcılar', Icon: PersonAddIcon },
+        { id: 'emails', title: 'E-posta Listesi', Icon: EmailIcon },
     ];
 
     return (
@@ -162,10 +215,10 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
                     .a-overlay { display: block; position: fixed; inset: 0; top: 54px; background: rgba(0,0,0,0.35); z-index: 15; }
                 }
             `}</style>
-            <div className="admin-bg">
+            {/* <div className="admin-bg">
                 <div className="admin-blob-red" />
                 <div className="admin-blob-yellow" />
-            </div>
+            </div> */}
             <div className="a-layout">
                 <div className="a-topbar">
                     <span style={{ fontFamily: 'Google Sans, sans-serif', fontWeight: 700, color: '#4285f4', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -205,7 +258,7 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                                 <StatCard label="Çekiliş" value={raffles.length} Icon={CelebrationIcon} colorIndex={0} />
                                 <StatCard label="Katılım" value={allEntries.length} Icon={GroupIcon} colorIndex={1} />
-                                <StatCard label="Aktif" value={raffles.length} Icon={CheckCircleIcon} colorIndex={2} />
+                                <StatCard label="Aktif" value={raffles.filter(r => r.isActive !== false).length} Icon={CheckCircleIcon} colorIndex={2} />
                             </div>
                             {raffles.length === 0 ? (
                                 <Empty msg="Henüz çekiliş eklenmemiş." action={<button onClick={openAdd} style={btnPrimary}><AddIcon sx={{ fontSize: 18 }} /> İlk Çekilişi Ekle</button>} />
@@ -216,6 +269,7 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
                                             colorIndex={i}
                                             onEdit={() => openEdit(r)}
                                             onDelete={() => handleDelete(r)}
+                                            onToggleActive={() => handleToggleActive(r)}
                                             onParticipants={async () => { const list = await getEntriesForRaffle(r.id); setParticipants({ raffle: r, list }); }}
                                             onDraw={() => handleDraw(r)}
                                         />
@@ -294,6 +348,66 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
                             </div>
                         </div>
                     )}
+
+                    {page === 'emails' && (
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
+                                <div>
+                                    <h1 style={pageTitleSt}>E-posta Listesi</h1>
+                                    <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: '0.3rem' }}>
+                                        {attendees.length} kayıtlı e-posta
+                                    </p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                    <button onClick={handleDownloadTemplate} style={{ ...btnOutline, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                                        <DownloadIcon sx={{ fontSize: 16 }} /> Örnek Şablon
+                                    </button>
+                                    <label style={{ ...btnPrimary, cursor: 'pointer', opacity: uploading ? 0.6 : 1, pointerEvents: uploading ? 'none' : 'auto' }}>
+                                        <UploadFileIcon sx={{ fontSize: 18 }} />
+                                        {uploading ? 'Yükleniyor...' : 'Excel Yükle'}
+                                        <input type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelUpload} style={{ display: 'none' }} />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'auto' }}>
+                                {attendees.length === 0 ? (
+                                    <Empty msg="Henüz e-posta listesi yüklenmemiş." action={
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
+                                            <p style={{ fontSize: '0.85rem', color: 'var(--muted2)' }}>Önce örnek şablonu indirin, e-postaları ekleyin ve yükleyin.</p>
+                                            <button onClick={handleDownloadTemplate} style={btnPrimary}>
+                                                <DownloadIcon sx={{ fontSize: 18 }} /> Örnek Şablon İndir
+                                            </button>
+                                        </div>
+                                    } />
+                                ) : (
+                                    <>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 320 }}>
+                                            <thead>
+                                                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                                                    <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontFamily: 'Google Sans, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#4285f4', whiteSpace: 'nowrap' }}>#</th>
+                                                    <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontFamily: 'Google Sans, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#ea4335', whiteSpace: 'nowrap' }}>E-posta</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {attendees.map((a, i) => (
+                                                    <tr key={a.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                                        <td style={{ padding: '0.6rem 1rem', color: 'var(--muted)', fontSize: '0.78rem', width: 50 }}>{i + 1}</td>
+                                                        <td style={{ padding: '0.6rem 1rem', fontSize: '0.85rem' }}>{a.email}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        <div style={{ padding: '1rem', borderTop: '1px solid var(--border)', textAlign: 'right' }}>
+                                            <button onClick={handleClearAttendees} style={{ ...btnSmall, background: 'transparent', color: '#ea4335', border: '1px solid rgba(234,67,53,0.25)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                <DeleteIcon sx={{ fontSize: 14 }} /> Listeyi Temizle
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </main>
             </div>
 
@@ -309,14 +423,18 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
     );
 }
 
-function RaffleAdminCard({ raffle, count, onEdit, onDelete, onParticipants, onDraw, colorIndex = 0 }) {
+function RaffleAdminCard({ raffle, count, onEdit, onDelete, onToggleActive, onParticipants, onDraw, colorIndex = 0 }) {
     const color = COLORS[colorIndex % COLORS.length];
+    const isActive = raffle.isActive !== false;
     return (
         <div
             onMouseEnter={e => e.currentTarget.style.borderColor = color}
             onMouseLeave={e => e.currentTarget.style.borderColor = `${color}25`}
-            style={{ background: 'var(--surface)', border: `1px solid ${color}25`, borderRadius: 16, padding: '1.4rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', transition: 'border-color 0.2s' }}>
-            {raffle.sponsor && <div style={{ fontFamily: 'Google Sans, sans-serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: color }}>{raffle.sponsor}</div>}
+            style={{ background: 'var(--surface)', border: `1px solid ${color}25`, borderRadius: 16, padding: '1.4rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', transition: 'border-color 0.2s', opacity: isActive ? 1 : 0.55 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {raffle.sponsor && <div style={{ fontFamily: 'Google Sans, sans-serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: color }}>{raffle.sponsor}</div>}
+                {!isActive && <span style={{ background: '#ea433520', color: '#ea4335', fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 50, border: '1px solid #ea433530' }}>Pasif</span>}
+            </div>
             <div style={{ fontFamily: 'Google Sans, sans-serif', fontSize: '1.05rem', fontWeight: 700 }}>{raffle.name}</div>
             {raffle.description && <div style={{ fontSize: '0.82rem', color: 'var(--muted2)', lineHeight: 1.55 }}>{raffle.description}</div>}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `${color}12`, border: `1px solid ${color}30`, borderRadius: 50, padding: '0.25rem 0.75rem', fontSize: '0.75rem', color: color, width: 'fit-content' }}>
@@ -326,8 +444,11 @@ function RaffleAdminCard({ raffle, count, onEdit, onDelete, onParticipants, onDr
                 <button onClick={onEdit} style={{ ...btnSmall, flex: 1, background: `${color}12`, color: color, border: `1px solid ${color}30`, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
                     <EditIcon sx={{ fontSize: 14 }} /> Düzenle
                 </button>
-                <button onClick={onDelete} style={{ ...btnSmall, flex: 1, background: 'transparent', color: '#ea4335', border: '1px solid rgba(234,67,53,0.25)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
-                    <DeleteIcon sx={{ fontSize: 14 }} /> Sil
+                <button onClick={onToggleActive} style={{ ...btnSmall, flex: 1, background: isActive ? '#f9ab0012' : '#34a85312', color: isActive ? '#f9ab00' : '#34a853', border: `1px solid ${isActive ? '#f9ab0030' : '#34a85330'}`, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                    {isActive ? <><VisibilityOffIcon sx={{ fontSize: 14 }} /> Pasife Al</> : <><VisibilityIcon sx={{ fontSize: 14 }} /> Aktife Al</>}
+                </button>
+                <button onClick={onDelete} style={{ ...btnSmall, background: 'transparent', color: '#ea4335', border: '1px solid rgba(234,67,53,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem' }}>
+                    <DeleteIcon sx={{ fontSize: 14 }} />
                 </button>
             </div>
             <button onClick={onParticipants} style={{ width: '100%', padding: '0.6rem', background: `${color}12`, border: `1px solid ${color}30`, borderRadius: 8, color: color, fontSize: '0.83rem', cursor: 'pointer', fontFamily: 'Google Sans, sans-serif', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
