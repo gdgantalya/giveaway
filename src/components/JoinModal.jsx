@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { addEntry, hasEntered } from '../dataService';
+import { addEntry, hasEntered, getAttendees, isAttendee } from '../dataService';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import CloseIcon from '@mui/icons-material/Close';
@@ -21,6 +21,11 @@ export default function JoinModal({ raffle, onClose, onSuccess }) {
 
         setLoading(true); setError('');
         try {
+            const attendeeList = await getAttendees();
+            if (attendeeList.length > 0) {
+                const allowed = await isAttendee(email);
+                if (!allowed) { setError('Bu e-posta adresi etkinlik katılımcı listesinde bulunamadı!'); setLoading(false); return; }
+            }
             const already = await hasEntered(raffle.id, email);
             if (already) { setError('Bu e-posta adresi ile zaten katıldınız!'); setLoading(false); return; }
             await addEntry({ raffleId: raffle.id, raffleName: raffle.name, name: name.trim(), email: email.toLowerCase().trim() });

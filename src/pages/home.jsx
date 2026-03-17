@@ -11,7 +11,7 @@ export default function Home({ onNavigate }) {
     async function load() {
         try {
             const [r, c] = await Promise.all([getRaffles(), getCountMap()]);
-            setRaffles(r);
+            setRaffles(r.filter(item => item.isActive !== false));
             setCounts(c);
         } catch (e) { console.error(e); }
     }
@@ -20,17 +20,19 @@ export default function Home({ onNavigate }) {
 
     return (
         <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh' }}>
-            <div className="home-bg">
+            {/* <div className="home-bg">
                 <div className="blob-green" />
                 <div className="blob-yellow" />
+            </div> */}
+            {/* Background GIF */}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.3 }}>
+                <img src="/hero_animated_logo.gif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            {/* Radial glow */}
-            <div style={{ position: 'fixed', top: -100, left: '50%', transform: 'translateX(-50%)', width: 700, height: 400, background: 'radial-gradient(ellipse, rgba(245,200,66,0.1) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} />
 
             {/* Header */}
             <header style={{ position: 'relative', zIndex: 1, padding: '5rem 2rem 0', textAlign: 'center', maxWidth: 680, margin: '0 auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', animation: 'fadeUp 0.5s ease 0.05s both' }}>
-                    <img src="/gdg-logo2.png" alt="GDG Antalya" style={{ height: 48, objectFit: 'contain' }} />
+                    <img src="/gdg-logo2.png" alt="GDG Antalya" style={{ height: 68, objectFit: 'contain' }} />
                 </div>
                 <h1 style={{ fontFamily: 'Google Sans, sans-serif', fontSize: 'clamp(2rem,5vw,3.5rem)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.03em', animation: 'fadeUp 0.6s ease 0.2s both', marginBottom: '0.5rem' }}>
                     Etkinlik{' '}
@@ -41,7 +43,9 @@ export default function Home({ onNavigate }) {
                     İstediğin çekilişi seç ve şansını dene.
                 </p>
 
-                <div style={{ width: 40, height: 2, background: 'var(--accent)', margin: '2.5rem auto', borderRadius: 2, animation: 'fadeUp 0.5s ease 0.5s both' }} />
+                <div style={{ width: 40, height: 2, background: 'var(--accent)', margin: '2rem auto', borderRadius: 2, animation: 'fadeUp 0.5s ease 0.5s both' }} />
+
+             
             </header>
 
             {/* Grid */}
@@ -59,6 +63,25 @@ export default function Home({ onNavigate }) {
                     </div>
                 )}
             </div>
+
+            {/* Footer - Kurallar */}
+            <footer style={{ position: 'relative', zIndex: 1, maxWidth: 520, margin: '0 auto', padding: '0 2rem 6rem' }}>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '1.2rem 1.5rem', textAlign: 'left' }}>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                        {[
+                            { color: '#4285f4', text: 'Etkinliğe katılmış olmanız gerekmektedir.' },
+                            { color: '#ea4335', text: 'Her çekilişe yalnızca 1 kez katılabilirsiniz.' },
+                            { color: '#34a853', text: 'Kayıt olurken etkinlikte kullandığınız e-posta adresini kullanın.' },
+                            { color: '#f9ab00', text: 'Kazanan, çekiliş sonucunda rastgele belirlenir.' },
+                        ].map((rule, i) => (
+                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.84rem', color: 'var(--muted2)', lineHeight: 1.5 }}>
+                                <span style={{ color: rule.color, fontWeight: 700, fontSize: '0.9rem', lineHeight: 1.5 }}>•</span>
+                                {rule.text}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </footer>
 
             {/* Admin link */}
             <button onClick={() => onNavigate('admin')} style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--muted)', padding: '0.5rem 1.1rem', borderRadius: 50, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'Google Sans, sans-serif', fontWeight: 600, zIndex: 50, transition: 'all 0.2s' }}
