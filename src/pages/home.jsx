@@ -35,7 +35,7 @@ export default function Home({ onNavigate }) {
                     <img src="/gdg-logo2.png" alt="GDG Antalya" style={{ height: 68, objectFit: 'contain' }} />
                 </div>
                 <h1 style={{ fontFamily: 'Google Sans, sans-serif', fontSize: 'clamp(2rem,5vw,3.5rem)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.03em', animation: 'fadeUp 0.6s ease 0.2s both', marginBottom: '0.5rem' }}>
-                    Etkinlik{' '}
+                    IWD'26 Antalya{' '}
                     <span style={{ color: '#4285f4' }}>Ç</span><span style={{ color: '#ea4335' }}>e</span><span style={{ color: '#34a853' }}>k</span><span style={{ color: '#f9ab00' }}>i</span><span style={{ color: '#4285f4' }}>l</span><span style={{ color: '#ea4335' }}>i</span><span style={{ color: '#34a853' }}>ş</span><span style={{ color: '#f9ab00' }}>i</span>
                 </h1>
 

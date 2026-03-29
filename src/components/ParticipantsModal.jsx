@@ -7,15 +7,20 @@ import ClearIcon from '@mui/icons-material/Clear';
 
 export default function ParticipantsModal({ raffle, participants, onClose }) {
     const [picked, setPicked] = useState(null);
+    const [pickedList, setPickedList] = useState([]);
     const [spinning, setSpinning] = useState(false);
     const [display, setDisplay] = useState('');
 
     if (!raffle) return null;
 
     function pickRandom() {
+        const count = raffle.winnerCount || 1;
         if (!participants.length) return;
-        setSpinning(true); setPicked(null);
-        const winner = participants[Math.floor(Math.random() * participants.length)];
+        setSpinning(true); setPicked(null); setPickedList([]);
+
+        const shuffled = [...participants].sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, Math.min(count, participants.length));
+        const winner = selected[0];
         const names = participants.map(p => p.name);
         let frame = 0; const total = 50;
 
@@ -27,6 +32,7 @@ export default function ParticipantsModal({ raffle, participants, onClose }) {
                 clearInterval(iv);
                 setDisplay(winner.name);
                 setPicked(winner);
+                setPickedList(selected);
                 setSpinning(false);
             }
         }, 60);
@@ -70,15 +76,24 @@ export default function ParticipantsModal({ raffle, participants, onClose }) {
                             </button>
                         </div>
 
-                        {picked && !spinning && (
-                            <div style={{ marginTop: '0.8rem', background: 'rgba(52,168,83,0.08)', border: '1px solid rgba(52,168,83,0.25)', borderRadius: 10, padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', animation: 'pop 0.4s ease' }}>
-                                <EmojiEventsIcon sx={{ fontSize: 18, color: '#34a853' }} />
-                                <span style={{ fontSize: '0.85rem', color: '#34a853', fontWeight: 600 }}>
-                                    <strong>{picked.name}</strong> seçildi!
-                                </span>
-                                <button onClick={() => { setPicked(null); setDisplay(''); }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                                    <ClearIcon sx={{ fontSize: 16 }} />
-                                </button>
+                        {pickedList.length > 0 && !spinning && (
+                            <div style={{ marginTop: '0.8rem', background: 'rgba(52,168,83,0.08)', border: '1px solid rgba(52,168,83,0.25)', borderRadius: 10, padding: '0.6rem 1rem', animation: 'pop 0.4s ease' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: pickedList.length > 1 ? '0.5rem' : 0 }}>
+                                    <EmojiEventsIcon sx={{ fontSize: 18, color: '#34a853' }} />
+                                    <span style={{ fontSize: '0.85rem', color: '#34a853', fontWeight: 600 }}>
+                                        {pickedList.length > 1 ? `${pickedList.length} kişi seçildi!` : <><strong>{picked.name}</strong> seçildi!</>}
+                                    </span>
+                                    <button onClick={() => { setPicked(null); setPickedList([]); setDisplay(''); }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                                        <ClearIcon sx={{ fontSize: 16 }} />
+                                    </button>
+                                </div>
+                                {pickedList.length > 1 && pickedList.map((p, i) => (
+                                    <div key={p.email} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.3rem', paddingBottom: '0.3rem', borderTop: '1px solid rgba(52,168,83,0.15)', fontSize: '0.83rem' }}>
+                                        <span style={{ color: '#34a853', fontWeight: 700, width: 18 }}>{i + 1}.</span>
+                                        <span style={{ fontWeight: 600 }}>{p.name}</span>
+                                        <span style={{ color: 'var(--muted)', marginLeft: 'auto' }}>{p.email}</span>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -102,10 +117,10 @@ export default function ParticipantsModal({ raffle, participants, onClose }) {
                             </thead>
                             <tbody>
                                 {participants.map((p, i) => (
-                                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border)', background: picked?.id === p.id ? 'rgba(52,168,83,0.05)' : 'transparent', transition: 'background 0.3s' }}>
+                                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border)', background: pickedList.some(w => w.id === p.id) ? 'rgba(52,168,83,0.05)' : 'transparent', transition: 'background 0.3s' }}>
                                         <td style={{ padding: '0.85rem 1.25rem', color: 'var(--muted)', fontSize: '0.78rem' }}>{i + 1}</td>
-                                        <td style={{ padding: '0.85rem 1.25rem', fontSize: '0.88rem', fontWeight: picked?.id === p.id ? 700 : 500, color: picked?.id === p.id ? '#34a853' : 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                            {picked?.id === p.id && <EmojiEventsIcon sx={{ fontSize: 16, color: '#f9ab00' }} />}
+                                        <td style={{ padding: '0.85rem 1.25rem', fontSize: '0.88rem', fontWeight: pickedList.some(w => w.id === p.id) ? 700 : 500, color: pickedList.some(w => w.id === p.id) ? '#34a853' : 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                            {pickedList.some(w => w.id === p.id) && <EmojiEventsIcon sx={{ fontSize: 16, color: '#f9ab00' }} />}
                                             {p.name}
                                         </td>
                                         <td style={{ padding: '0.85rem 1.25rem', color: 'var(--muted2)', fontSize: '0.83rem' }}>{p.email}</td>

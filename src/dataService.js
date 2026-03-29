@@ -76,9 +76,10 @@ export async function hasEntered(raffleId, email) {
 
 // ── WINNER ───────────────────────────────────────────
 
-export async function saveWinner(raffleId, winner) {
+export async function saveWinner(raffleId, winners) {
+    const arr = Array.isArray(winners) ? winners : [winners];
     await updateDoc(doc(db, 'raffles', raffleId), {
-        winner: { name: winner.name, email: winner.email },
+        winners: arr.map(w => ({ name: w.name, email: w.email })),
         completedAt: new Date(),
         status: 'completed',
     });
@@ -86,7 +87,7 @@ export async function saveWinner(raffleId, winner) {
 
 export async function clearWinner(raffleId) {
     await updateDoc(doc(db, 'raffles', raffleId), {
-        winner: null,
+        winners: [],
         completedAt: null,
         status: 'active',
     });

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -22,7 +23,8 @@ export default function RaffleCard({ raffle, index, count, onJoin }) {
     const [imgErr, setImgErr] = useState(false);
     const color = COLORS[index % COLORS.length];
     const PlaceholderIcon = ICONS[index % ICONS.length];
-    const isCompleted = raffle.status === 'completed' && raffle.winner;
+    const winners = raffle.winners?.length > 0 ? raffle.winners : (raffle.winner ? [raffle.winner] : []);
+    const isCompleted = raffle.status === 'completed' && winners.length > 0;
 
     return (
         <div
@@ -70,13 +72,22 @@ export default function RaffleCard({ raffle, index, count, onJoin }) {
 
                 {/* KAZANAN KUTUSU */}
                 {isCompleted && (
-                    <div style={{ background: 'rgba(52,168,83,0.08)', border: '1px solid rgba(52,168,83,0.25)', borderRadius: 12, padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.3rem' }}>
-                        <EmojiEventsIcon sx={{ fontSize: 24, color: '#f9ab00', flexShrink: 0 }} />
-                        <div>
-                            <div style={{ fontSize: '0.68rem', fontFamily: 'Google Sans, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#34a853', marginBottom: '0.15rem' }}>Kazanan</div>
-                            <div style={{ fontFamily: 'Google Sans, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text)' }}>{raffle.winner.name}</div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--muted2)' }}>{raffle.winner.email}</div>
+                    <div style={{ background: 'rgba(52,168,83,0.08)', border: '1px solid rgba(52,168,83,0.25)', borderRadius: 12, padding: '0.85rem 1rem', marginTop: '0.3rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: winners.length > 1 ? '0.6rem' : 0 }}>
+                            <EmojiEventsIcon sx={{ fontSize: 20, color: '#f9ab00', flexShrink: 0 }} />
+                            <div style={{ fontSize: '0.68rem', fontFamily: 'Google Sans, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#34a853' }}>
+                                {winners.length > 1 ? `${winners.length} Kazanan` : 'Kazanan'}
+                            </div>
                         </div>
+                        {winners.map((w, i) => (
+                            <div key={w.email} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingTop: i > 0 ? '0.4rem' : 0, marginTop: i > 0 ? '0.4rem' : 0, borderTop: i > 0 ? '1px solid rgba(52,168,83,0.15)' : 'none' }}>
+                                {winners.length > 1 && <span style={{ fontSize: '0.68rem', color: '#34a853', fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>}
+                                <div>
+                                    <div style={{ fontFamily: 'Google Sans, sans-serif', fontWeight: 700, fontSize: '0.92rem', color: 'var(--text)' }}>{w.name}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--muted2)' }}>{w.email}</div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
@@ -84,6 +95,22 @@ export default function RaffleCard({ raffle, index, count, onJoin }) {
                     <GroupIcon sx={{ fontSize: 15, color: 'var(--muted)' }} />
                     {count} katılımcı
                 </div>
+
+                {/* Takip Et butonu */}
+                {raffle.socialUrl && (
+                    <a href={raffle.socialUrl} target="_blank" rel="noopener noreferrer" style={{
+                        marginTop: '0.5rem', padding: '0.8rem',
+                        background: `${color}12`,
+                        color: color,
+                        border: `1px solid ${color}35`,
+                        borderRadius: 10, fontFamily: 'Google Sans, sans-serif', fontSize: '0.88rem', fontWeight: 700,
+                        textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+                        transition: 'all 0.25s ease',
+                    }}>
+                        <OpenInNewIcon sx={{ fontSize: 16 }} />
+                        {raffle.sponsor ? `${raffle.sponsor} Takip Et` : 'Takip Et'}
+                    </a>
+                )}
 
                 {/* Tamamlandıysa buton gösterme, değilse göster */}
                 {isCompleted ? (

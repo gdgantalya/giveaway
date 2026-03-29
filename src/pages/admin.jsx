@@ -99,6 +99,8 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
     const [fDesc, setFDesc] = useState('');
     const [fSponsor, setFSponsor] = useState('');
     const [fImage, setFImage] = useState('');
+    const [fSocialUrl, setFSocialUrl] = useState('');
+    const [fWinnerCount, setFWinnerCount] = useState(1);
     const [saving, setSaving] = useState(false);
     const [participants, setParticipants] = useState(null);
     const [drawRaffle, setDrawRaffle] = useState(null);
@@ -117,16 +119,16 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
 
     useEffect(() => { load(); }, []);
 
-    function clearForm() { setFName(''); setFDesc(''); setFSponsor(''); setFImage(''); setEditId(null); }
+    function clearForm() { setFName(''); setFDesc(''); setFSponsor(''); setFImage(''); setFSocialUrl(''); setFWinnerCount(1); setEditId(null); }
     function openAdd() { clearForm(); setPage('add'); setMenuOpen(false); }
-    function openEdit(r) { setEditId(r.id); setFName(r.name || ''); setFDesc(r.description || ''); setFSponsor(r.sponsor || ''); setFImage(r.imageUrl || ''); setPage('add'); }
+    function openEdit(r) { setEditId(r.id); setFName(r.name || ''); setFDesc(r.description || ''); setFSponsor(r.sponsor || ''); setFImage(r.imageUrl || ''); setFSocialUrl(r.socialUrl || ''); setFWinnerCount(r.winnerCount || 1); setPage('add'); }
     function navigate(id) { if (id === 'add') clearForm(); setPage(id); setMenuOpen(false); }
 
     async function handleSave() {
         if (!fName.trim()) { showToast('Çekiliş adı zorunlu!', 'error'); return; }
         setSaving(true);
         try {
-            const data = { name: fName.trim(), description: fDesc.trim(), sponsor: fSponsor.trim(), imageUrl: fImage.trim() };
+            const data = { name: fName.trim(), description: fDesc.trim(), sponsor: fSponsor.trim(), imageUrl: fImage.trim(), socialUrl: fSocialUrl.trim(), winnerCount: Math.max(1, parseInt(fWinnerCount) || 1) };
             if (editId) { await updateRaffle(editId, data); showToast('Çekiliş güncellendi! ✓'); }
             else { await addRaffle(data); showToast('Çekiliş eklendi! ✓'); }
             clearForm(); await load(); setPage('raffles');
@@ -295,6 +297,14 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
                                     <input style={inputSt} placeholder="Örn: XYZ Akademi" value={fSponsor} onChange={e => setFSponsor(e.target.value)}
                                         onFocus={e => e.target.style.borderColor = '#f9ab00'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
                                 </FormRow>
+                                <FormRow label="Sosyal Medya / Sponsor Bağlantısı (opsiyonel)">
+                                    <input style={inputSt} type="url" placeholder="https://instagram.com/..." value={fSocialUrl} onChange={e => setFSocialUrl(e.target.value)}
+                                        onFocus={e => e.target.style.borderColor = '#4285f4'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+                                </FormRow>
+                                <FormRow label="Kazanan Sayısı">
+                                    <input style={inputSt} type="number" min="1" max="20" placeholder="1" value={fWinnerCount} onChange={e => setFWinnerCount(e.target.value)}
+                                        onFocus={e => e.target.style.borderColor = '#4285f4'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+                                </FormRow>
                                 <FormRow label="Görsel URL (opsiyonel)">
                                     <input style={inputSt} type="url" placeholder="https://..." value={fImage} onChange={e => setFImage(e.target.value)}
                                         onFocus={e => e.target.style.borderColor = '#ea4335'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
@@ -412,7 +422,7 @@ function AdminPanel({ page, setPage, onLogout, onNavigate }) {
             </div>
 
             {participants && <ParticipantsModal raffle={participants.raffle} participants={participants.list} onClose={() => setParticipants(null)} />}
-            {drawRaffle && <WinnerOverlay participants={drawRaffle.list} raffleName={drawRaffle.raffle.name} raffleId={drawRaffle.raffle.id} onClose={() => setDrawRaffle(null)} onWinnerSaved={() => { setDrawRaffle(null); load(); }} />}
+            {drawRaffle && <WinnerOverlay participants={drawRaffle.list} raffleName={drawRaffle.raffle.name} raffleId={drawRaffle.raffle.id} winnerCount={drawRaffle.raffle.winnerCount || 1} onClose={() => setDrawRaffle(null)} onWinnerSaved={() => { setDrawRaffle(null); load(); }} />}
 
             {toast && (
                 <div style={{ position: 'fixed', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)', background: 'var(--surface)', border: `1px solid ${toast.type === 'error' ? '#ea4335' : '#34a853'}`, color: toast.type === 'error' ? '#ea4335' : '#34a853', borderRadius: 50, padding: '0.8rem 1.5rem', fontSize: '0.88rem', zIndex: 2000, animation: 'pop 0.3s ease', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
