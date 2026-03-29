@@ -26,7 +26,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DownloadIcon from '@mui/icons-material/Download';
 
-const ADMIN_CREDS = { user: 'admin', pass: 'admin123' };
+const ADMIN_CREDS = { user: import.meta.env.VITE_ADMIN_USER, pass: import.meta.env.VITE_ADMIN_PASS };
 const COLORS = ['#4285f4', '#ea4335', '#34a853', '#f9ab00'];
 
 export default function Admin({ onNavigate }) {
